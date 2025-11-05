@@ -1,4 +1,3 @@
-
 const POKEDEX_SRC = "./DATA/pokedex.json";
 
 const IMAGES_SRC = "./FILES/images";
@@ -14,19 +13,67 @@ const app = express();
 app.use('/images', express.static(IMAGES_SRC));
 
 
-// Route renvoyer tous les pokemons
 app.get('/', (req, res) => {
+    // Lire le fichier et retourne soit une erreur soit les données
     fs.readFile(POKEDEX_SRC, 'utf8', (err, data) => {
         if (err) {
             console.error('Erreur lors de la lecture du fichier:', err);
-            res.status(500).json({ error: 'Erreur serveur' });
-            return;
+            return res.status(500).send('Erreur serveur');
         }
-        
+
         const pokedex = JSON.parse(data);
-        res.json(pokedex);
+
+        const html = `
+            <!DOCTYPE html>
+            <html lang="fr">
+            <head>
+                <meta charset="UTF-8">
+                <title>Liste des Pokémon</title>
+                <style>
+                    body { font-family: sans-serif; background: #fafafa; text-align: center; }
+                    table { margin: 20px auto; border-collapse: collapse; width: 90%; }
+                    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+                    th { background: #f2f2f2; }
+                    img { display: block; margin: auto; }
+                </style>
+            </head>
+            <body>
+                <h1>Liste des Pokémon</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th>Stats</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pokedex.map(pokemon => {
+                        // Le map join permet de faire une boucle pour chaque pokemon et de le mettre au format html
+                        const imgFile = String(pokemon.id).padStart(3, '0') + '.png';
+                        const imageUrl = `/images/${imgFile}`;
+                        return `
+                            <tr>
+                                <td><img src="${imageUrl}" alt="${pokemon.name.french}" width="50"></td>
+                                <td>${pokemon.id}</td>
+                                <td>${pokemon.name.french}</td>
+                                <td>${pokemon.type.join(', ')}</td>
+                                <td>HP: ${pokemon.base.HP}, Attack: ${pokemon.base.Attack}, Defense: ${pokemon.base.Defense}</td>
+                            </tr>
+                        `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        res.send(html);
     });
 });
+
 
 // Route renvoyer un pokemon au hasard
 app.get('/hasard', (req, res) => {
@@ -45,7 +92,30 @@ app.get('/hasard', (req, res) => {
         const pokemonHasard = pokedex.find(pokemon => pokemon.id === randomId);
         
         if (pokemonHasard) {
-            res.json(pokemonHasard);
+            // padStart permet d'avoir l'id plus des zéros devant pour faire les chiffres des images si on a le chiffre 3 
+            // par exemple alors on aura 003.png / 51 alors 051.png
+            const imgFile = String(pokemonHasard.id).padStart(3, '0') + '.png';
+            const imageUrl = `/images/${imgFile}`;
+
+            const html = `
+                <!DOCTYPE html>
+                <html lang="fr">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${pokemonHasard.name.french}</title>
+                    <style>
+                        body { font-family: monospace; background: #fafafa; text-align: center; }
+                        img { width: 200px; margin-top: 20px; }
+                        pre { text-align: left; display: inline-block; background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+                    </style>
+                </head>
+                <body>
+                    <img src="${imageUrl}" alt="${pokemonHasard.name.french}">
+                    <pre>${JSON.stringify(pokemon,null,1)}</pre>
+                </body>
+                </html>
+            `;
+            res.send(html);
         } else {
             res.status(404).json({ error: 'Pokemon non trouvé' });
         }
@@ -109,8 +179,6 @@ app.get('/pokemon/nom/:nom', (req, res) => {
         
         if (pokemon) {
             const pokemonId = pokemon.id;
-            // padStart permet d'avoir l'id plus des zéros devant pour faire les chiffres des images si on a le chiffre 3 
-            // par exemple alors on aura 003.png / 51 alors 051.png
             const imgFile = String(pokemonId).padStart(3, '0') + '.png';
             const imageUrl = `/images/${imgFile}`;
 
