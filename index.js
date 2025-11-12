@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 
         const pokedex = JSON.parse(data);
 
-        const html = `
+/*         const html = `
             <!DOCTYPE html>
             <html lang="fr">
             <head>
@@ -69,8 +69,8 @@ app.get('/', (req, res) => {
             </body>
             </html>
         `;
-
-        res.send(html);
+ */
+        res.json(pokedex);
     });
 });
 
