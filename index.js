@@ -91,8 +91,8 @@ app.get('/hasard', (req, res) => {
         // Trouver le pokemon avec cet id
         const pokemonHasard = pokedex.find(pokemon => pokemon.id === randomId);
         
-        if (pokemonHasard) {
-            // padStart permet d'avoir l'id plus des zéros devant pour faire les chiffres des images si on a le chiffre 3 
+         if (pokemonHasard.length !== 0) {
+           /* // padStart permet d'avoir l'id plus des zéros devant pour faire les chiffres des images si on a le chiffre 3 
             // par exemple alors on aura 003.png / 51 alors 051.png
             const imgFile = String(pokemonHasard.id).padStart(3, '0') + '.png';
             const imageUrl = `/images/${imgFile}`;
@@ -114,8 +114,8 @@ app.get('/hasard', (req, res) => {
                     <pre>${JSON.stringify(pokemon,null,1)}</pre>
                 </body>
                 </html>
-            `;
-            res.send(html);
+            `; */
+            res.json(pokemonHasard);
         } else {
             res.status(404).json({ error: 'Pokemon non trouvé' });
         }
@@ -133,8 +133,8 @@ app.get('/pokemon/:id', (req, res) => {
         // rechercher le pokemon avec l'id correspondant
         const pokemon = pokedex.find(p => p.id === pokemonId);
         
-   if (pokemon) {
-            const imgFile = String(pokemonId).padStart(3, '0') + '.png';
+        if (pokemon) {
+/*             const imgFile = String(pokemonId).padStart(3, '0') + '.png';
             const imageUrl = `/images/${imgFile}`;
 
             const html = `
@@ -154,9 +154,9 @@ app.get('/pokemon/:id', (req, res) => {
                     <pre>${JSON.stringify(pokemon, null, 1)}</pre>
                 </body>
                 </html>
-            `;
+            `; */
 
-            res.send(html);
+            res.json(pokemon);
         } else {
             res.status(404).json({ error: `Pokemon avec l'id ${pokemonId} non trouvé` });
         }
@@ -178,7 +178,7 @@ app.get('/pokemon/nom/:nom', (req, res) => {
         );
         
         if (pokemon) {
-            const pokemonId = pokemon.id;
+/*             const pokemonId = pokemon.id;
             const imgFile = String(pokemonId).padStart(3, '0') + '.png';
             const imageUrl = `/images/${imgFile}`;
 
@@ -199,10 +199,32 @@ app.get('/pokemon/nom/:nom', (req, res) => {
                     <pre>${JSON.stringify(pokemon,null,1)}</pre>
                 </body>
                 </html>
-            `;
-            res.send(html);
+            `; */
+            res.json(pokemon);
         } else {
             res.status(404).json({ error: `Pokemon "${req.params.nom}" non trouvé` });
+        }
+    });
+});
+
+// Route renvoyer les pokemon par un type
+app.get('/pokemon/type/:type', (req, res) => {
+    const pokemonType = req.params.type.toLowerCase();
+    
+    fs.readFile(POKEDEX_SRC, 'utf8', (err, data) => {
+        
+        const pokedex = JSON.parse(data);
+        
+        // Rechercher le pokemon par son type on met tout en minuscule
+        // On utilise filter car il peut y avoir plusieurs pokemons du même type find ne suffit pas cela renvoie qu'un seul pokemon
+        const pokemonsFiltres  = pokedex.filter(p => 
+            p.type.some(t => t.toLowerCase() === pokemonType)
+        );
+        
+        if (pokemonsFiltres.length > 0) {
+            res.json(pokemonsFiltres);
+        } else {
+            res.status(404).json({ error: `Aucun Pokémon trouvé pour le type "${pokemonType}"` });
         }
     });
 });
